@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+env/
+venv/
+.env
+
+# Node
+node_modules/
+npm-debug.log
+build/
+.DS_Store
+
+# IDEs
+.idea/
+.vscode/
+*.swp
