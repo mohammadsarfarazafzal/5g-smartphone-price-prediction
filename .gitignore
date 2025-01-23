@@ -16,3 +16,6 @@ build/
 .idea/
 .vscode/
 *.swp
+
+# RAW DATA
+1year_5g_mobile_details.html
