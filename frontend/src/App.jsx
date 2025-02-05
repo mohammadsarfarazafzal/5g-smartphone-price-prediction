@@ -4,13 +4,13 @@ import axios from 'axios';
 const App = () => {
   const [features, setFeatures] = useState({
     Brand: '',
+    // Segment: '',
     'Screen Size (in)': '',
     'Front Camera (MP)': '',
     'Back Camera (MP)': '',
     'Battery (mAh)': '',
     'RAM (GB)': '',
-    'ROM (GB)': '',
-    'Clock Speed (GHz)': ''
+    'ROM (GB)': ''
   });
   const [prediction, setPrediction] = useState(null); // State to hold price
   const [loading, setLoading] = useState(false);
@@ -31,13 +31,13 @@ const App = () => {
     try {
       const response = await axios.post('http://127.0.0.1:5000/predict', {
         Brand: features.Brand,
+        // Segment: features.Segment,
         'Screen Size (in)': parseFloat(features['Screen Size (in)']),
         'Front Camera (MP)': parseFloat(features['Front Camera (MP)']),
         'Back Camera (MP)': parseFloat(features['Back Camera (MP)']),
         'Battery (mAh)': parseInt(features['Battery (mAh)']),
         'RAM (GB)': parseInt(features['RAM (GB)']),
-        'ROM (GB)': parseFloat(features['ROM (GB)']),
-        'Clock Speed (GHz)': parseFloat(features['Clock Speed (GHz)'])
+        'ROM (GB)': parseFloat(features['ROM (GB)'])
       });
       setPrediction(response.data.price); // Update price state
     } catch (error) {
@@ -87,11 +87,26 @@ const App = () => {
               <option value="Google">Google</option>
               <option value="Tecno">Tecno</option>
               <option value="Lava">Lava</option>
-              <option value="HMD">HMD</option>
-              <option value="Ulefone">Ulefone</option>
-              <option value="Oukitel">Oukitel</option>
+              <option value="Nokia">Nokia</option>
+              <option value="Asus">Asus</option>
+              <option value="Huawei">Huawei</option>
             </select>
           </div>
+          {/* <div className="space-y-2">
+            <label className="block text-sm font-medium">Segment</label>
+            <select
+              name="Segment"
+              value={features.Segment}
+              onChange={handleChange}
+              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="">Select Segment</option>
+              <option value="Premium">Premium</option>
+              <option value="Samsung">Mid</option>
+              <option value="Realme">Budget</option>
+            </select>
+          </div> */}
 
           <div className="space-y-2">
             <label className="block text-sm font-medium">Screen Size (in)</label>
@@ -104,20 +119,6 @@ const App = () => {
               className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
               min="5"
-              max="8"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Clock Speed (GHz)</label>
-            <input
-              type="number"
-              step="0.1"
-              name="Clock Speed (GHz)"
-              value={features['Clock Speed (GHz)']}
-              onChange={handleChange}
-              className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              min="1"
               max="8"
             />
           </div>

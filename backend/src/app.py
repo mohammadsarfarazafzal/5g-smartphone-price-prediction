@@ -17,18 +17,42 @@ with open('../models/segmented_scalers.pkl', 'rb') as f:
 with open('../models/feature_columns.pkl', 'rb') as f:
     feature_columns = pickle.load(f)
 
-# Define brand tiers
-premium_brands = ['Apple', 'Google', 'OnePlus']
-mid_brands = ['Nothing', 'Samsung']
-
+flagship_brands = ['Apple','Google','Asus']
+premium_brands = ['Nothing', 'OnePlus']
 def determine_price_segment(features):
     """Determine which price segment model to use based on features."""
-    if features['brand_tier'] == 'premium' or features['RAM (GB)'] >= 12:
+    if features['brand_tier'] == 'flagship':
+        return 'flagship'
+    elif features['brand_tier'] == 'premium':
         return 'premium'
-    elif features['brand_tier'] == 'budget' and features['RAM (GB)'] <= 6:
+    elif features['rom_tier'] == 'basic':
         return 'budget'
+    elif features['ram_tier'] == 'basic':
+        return 'budget'
+    
+    # For flexible brand_tier
+    elif features['brand_tier'] == 'flexible':
+        # High-end combinations
+        if features['ram_tier'] == 'high' and features['rom_tier'] in ['high', 'mid'] and features['cam_tier'] == 'high':
+            return 'flagship'
+        
+        # Premium combinations
+        elif features['ram_tier'] == 'mid' and features['rom_tier'] in ['high', 'mid'] and features['cam_tier'] == 'high':
+            return 'premium'
+        
+        # Mid-range combinations
+        elif (features['ram_tier'] in ['high', 'mid'] and 
+            features['rom_tier'] in ['high', 'mid'] and 
+            features['cam_tier'] == 'basic'):
+            return 'mid'
+        
+        # Everything else goes to budget
+        else:
+            return 'budget'
+    
+    # Default case
     else:
-        return 'mid'
+        return 'budget'
 
 def prepare_features(data):
     """Prepare features in the same way as training data."""
@@ -36,23 +60,33 @@ def prepare_features(data):
     
     # Keep original brand
     features['Brand'] = data['Brand']
-    
     # Process brand tier
     brand = data['Brand']
-    features['brand_tier'] = ('premium' if brand in premium_brands 
-                            else 'mid' if brand in mid_brands 
-                            else 'budget')
+    features['brand_tier'] = ('flagship' if brand in flagship_brands
+                            else 'premium' if brand in premium_brands
+                            else 'flexible')
     
     # Process RAM tier
     ram = float(data['RAM (GB)'])
-    if ram <= 4:
-        features['ram_tier'] = 'basic'
-    elif ram <= 8:
-        features['ram_tier'] = 'mid'
-    elif ram <= 12:
+    if ram >= 12:
         features['ram_tier'] = 'high'
+    elif ram >= 6:
+        features['ram_tier'] = 'mid'
     else:
-        features['ram_tier'] = 'ultra'
+        features['ram_tier'] = 'basic'
+    rom = float(data['ROM (GB)'])
+    if rom >= 256:
+        features['rom_tier'] = 'high'
+    elif rom >= 128:
+        features['rom_tier'] = 'mid'
+    else:
+        features['rom_tier'] = 'basic'
+        
+    cam = float(data['Back Camera (MP)'])
+    if cam > 100:
+        features['cam_tier'] = 'high'
+    else:
+        features['cam_tier'] = 'basic'
     
     # Create interaction features
     features['storage_per_ram'] = float(data['ROM (GB)']) / float(data['RAM (GB)'])
@@ -65,7 +99,6 @@ def prepare_features(data):
     features['Battery (mAh)'] = float(data['Battery (mAh)'])
     features['RAM (GB)'] = float(data['RAM (GB)'])
     features['ROM (GB)'] = float(data['ROM (GB)'])
-    features['Clock Speed (GHz)'] = float(data['Clock Speed (GHz)'])
     
     return features
 
@@ -77,8 +110,8 @@ def create_feature_vector(features):
     # One-hot encode categorical features
     df_encoded = pd.get_dummies(
         df,
-        columns=['Brand', 'brand_tier', 'ram_tier'],
-        prefix=['Brand', 'brand_tier', 'ram_tier']
+        columns=['Brand', 'ram_tier', 'rom_tier', 'brand_tier', 'cam_tier'],
+        prefix=['Brand', 'ram_tier', 'rom_tier', 'brand_tier', 'cam_tier']
     )
     
     # Ensure all feature columns from training are present
@@ -101,7 +134,7 @@ def predict():
         
         required_fields = [
             'Brand', 'Screen Size (in)', 'Front Camera (MP)', 'Back Camera (MP)',
-            'Battery (mAh)', 'RAM (GB)', 'ROM (GB)', 'Clock Speed (GHz)'
+            'Battery (mAh)', 'RAM (GB)', 'ROM (GB)'
         ]
         
         # Check for missing fields
